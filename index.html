@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <style>
+        body { margin: 0; }
+        .fullscreen { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+    <a-scene class="fullscreen" embedded antialias="true">
+        <a-assets>
+            <a-asset-item id="model" src="/WebAR/models/cube.glb"></a-asset-item>
+        </a-assets>
+
+        <a-entity id="rig" position="0 1.6 0">
+            <a-entity id="camera" camera look-controls wasd-controls="enabled: false;"></a-entity>
+        </a-entity>
+
+        <a-entity gltf-model="#model" id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
+        
+        <a-light type="ambient" color="#ffffff"></a-light>
+        <a-light type="directional" intensity="0.5" position="-1 1 1"></a-light>
+        
+        <a-sky color="#ECECEC"></a-sky>
+    </a-scene>
+
+    <script>
+        let model = document.querySelector('#model-entity');
+        let rig = document.querySelector('#rig');
+        let initialScale = 1;
+        let scaleStep = 0.1;
+        let minScale = 0.5;
+        let maxScale = 2;
+        
+        window.addEventListener('wheel', function(event) {
+            // Zoom in/out
+            let newScale = model.getAttribute('scale').x + (event.deltaY * scaleStep * -0.01);
+            newScale = Math.max(minScale, Math.min(newScale, maxScale));
+            model.setAttribute('scale', {x: newScale, y: newScale, z: newScale});
+        });
+
+        window.addEventListener('keydown', function(event) {
+            // Pan (WASD keys)
+            let position = rig.getAttribute('position');
+            switch (event.key) {
+                case 'a': // left
+                    position.x -= 0.1;
+                    break;
+                case 'd': // right
+                    position.x += 0.1;
+                    break;
+                case 'w': // forward
+                    position.z -= 0.1;
+                    break;
+                case 's': // backward
+                    position.z += 0.1;
+                    break;
+            }
+            rig.setAttribute('position', position);
+        });
+
+        model.addEventListener('mousedown', function(event) {
+            // Rotate
+            let initialRotation = model.getAttribute('rotation');
+            
+            function onMouseMove(event) {
+                let rotation = model.getAttribute('rotation');
+                rotation.y = initialRotation.y + event.movementX;
+                rotation.x = initialRotation.x + event.movementY;
+                model.setAttribute('rotation', rotation);
+            }
+
+            function onMouseUp() {
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            }
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        });
+    </script>
+</body>
+</html>

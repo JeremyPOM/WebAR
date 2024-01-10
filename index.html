@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras/dist/aframe-extras.min.js"></script>
     <style>
         html, body {
             margin: 0;
@@ -59,7 +60,7 @@
 
     <a-scene class="fullscreen" embedded renderer="antialias: true">
         <a-assets>
-            <a-asset-item id="model" src="models/test1.glb"></a-asset-item>
+            <a-asset-item id="model" src="models/test2-animated.glb"></a-asset-item>
         </a-assets>
 
          <!-- Testing with a basic box -->
@@ -70,7 +71,7 @@
             <a-entity id="camera" camera look-controls wasd-controls="enabled: false;"></a-entity>
         </a-entity>
 
-        <a-entity gltf-model="#model" id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
+        <a-entity gltf-model="#animatedModel" animation-mixer id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
         
         <!-- Camera and Lighting -->
    
@@ -82,20 +83,34 @@
 
     <script>
         let model = document.querySelector('#model-entity');
+        let cameraEl = document.querySelector('#camera');
         let rig = document.querySelector('#rig');
         let initialScale = 1;
         let scaleStep = 0.1;
         let minScale = 0.5;
         let maxScale = 2;
-        
-        // Zoom functionality
+    
+        // Detect if the user is on mobile
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+        if (isMobile) {
+            // Mobile-specific settings
+            cameraEl.setAttribute('look-controls', 'touchEnabled: true');
+            // Add any other mobile-specific configurations here
+        } else {
+            // Web-specific settings
+            cameraEl.setAttribute('look-controls', 'touchEnabled: false');
+            // Add any other web-specific configurations here
+        }
+    
+        // Zoom functionality (common to both web and mobile)
         window.addEventListener('wheel', function(event) {
             let newScale = model.getAttribute('scale').x + (event.deltaY * scaleStep * -0.01);
             newScale = Math.max(minScale, Math.min(newScale, maxScale));
             model.setAttribute('scale', {x: newScale, y: newScale, z: newScale});
         });
     
-        // Pan functionality
+        // Existing panning functionality
         let isPanning = false;
         let startPanPosition = { x: 0, y: 0 };
         window.addEventListener('mousedown', function(event) {
@@ -128,46 +143,9 @@
             }
         });
     
-        // Rotation functionality
-        let isRotating = false;
-        let startRotation = { x: 0, y: 0 };
-        window.addEventListener('mousedown', function(event) {
-            if (event.button === 2) { // Right mouse button
-                isRotating = true;
-                startRotation.x = event.clientX;
-                startRotation.y = event.clientY;
-                event.preventDefault();
-            }
-        });
-    
-        window.addEventListener('mousemove', function(event) {
-            if (isRotating) {
-                let deltaX = (event.clientX - startRotation.x) * 0.5;
-                let deltaY = (event.clientY - startRotation.y) * 0.5;
-                let rotation = rig.getAttribute('rotation');
-                rig.setAttribute('rotation', {
-                    x: rotation.x - deltaY,
-                    y: rotation.y + deltaX,
-                    z: rotation.z
-                });
-                startRotation.x = event.clientX;
-                startRotation.y = event.clientY;
-            }
-        });
-    
-        window.addEventListener('mouseup', function(event) {
-            if (event.button === 2) {
-                isRotating = false;
-            }
-        });
-    
         // Console logs for debugging
         document.querySelector('a-scene').addEventListener('loaded', () => {
             console.log('A-Frame scene is loaded');
-        });
-    
-        document.querySelector('a-box').addEventListener('loaded', () => {
-            console.log('Box is loaded');
         });
     </script>
     

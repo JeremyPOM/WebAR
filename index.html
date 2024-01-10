@@ -17,11 +17,18 @@
         }
         .title {
             position: absolute;
-            top: 10px;
+            bottom: 15px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 30px;
             color: rgb(10, 125, 255); /* Adjust color to match company branding */
+            background-color:rgba(242, 237, 232,0.8);
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            border-radius: 8px;
+            opacity: 0.7;
             font-family: 'Arial', sans-serif;
             z-index: 10; /* Ensure it's above the A-Frame scene */
         }
@@ -48,30 +55,67 @@
                 width: 50px; /* Smaller size for smaller screens */
             }
         }
+        .control-button {
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 24px;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            color: rgb(242, 237, 232); /* Adjust the color as needed */
+            opacity: 0.8;
+            z-index: 20; /* Ensure it's above the A-Frame scene */
+            margin-right: 10px; /* Add some spacing between buttons */
+        }
+
+        /* Style for the VR button */
+        .a-enter-vr-button {
+        background-color: rgb(8, 10, 11); /* Change background color */
+        color: rgb(8, 10, 11); /* Change text color */
+        border-radius: 8px; /* Rounded corners */
+        bottom: 20px;
+        right: 20px
+        }
+
         /* Style for the objects control table */
         #objectsTable {
                 position: absolute;
-                top: 50px; /* Adjust as needed */
+                top: 10px; /* Adjust as needed */
                 left: 10px; /* Adjust as needed */
                 border-collapse: collapse;
                 z-index: 20; /* To ensure it's above the A-Frame scene */
             }
 
             #objectsTable th, #objectsTable td {
-                border: 1px solid #ddd;
-                padding: 8px;
+                border: 2px solid rgb(8, 10, 11);
+                background-color:rgba(242, 237, 232,0.8);
+                background-blend-mode: overlay;
+                padding: 4px;
             }
+
+        #animationControlButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            color: rgb(242, 237, 232); /* Adjust the color as needed */
+            opacity: 0.8;
+            z-index: 20; /* Ensure it's above the A-Frame scene */
+        }
     </style>
         <!-- ... existing head elements ... -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
 </head>
 <body>
      <!-- Title -->
-     <div class="title">POM-AR</div>
+     <div class="title">TEST Project 001</div>
 
      <!-- Logo -->
-     <img src="/WebAR/assets/logos/Pomerleau_Sceau_Grand_bleu_RGB.png" alt="Company Logo" class="logo">
+     <img src="/WebAR/assets/logos/Seal-B.png" alt="Company Logo" class="logo">
 
      <table id="objectsTable">
         <tr>
@@ -80,6 +124,12 @@
         </tr>
         <!-- Table rows will be added here dynamically -->
     </table>
+
+    <!-- Animation Control Button -->
+    <button id="animationControlButton" class="fa fa-play"></button>
+
+    <!-- Home Button -->
+    <button id="homeButton" class="fa fa-home control-button"></button>
 
     <a-scene class="fullscreen" embedded renderer="antialias: true">
         <a-assets>
@@ -93,9 +143,15 @@
         <a-entity id="rig" position="0 1.6 0">
             <a-entity id="camera" camera look-controls wasd-controls="enabled: false;"></a-entity>
         </a-entity>
-
-        <a-entity gltf-model="#model" animation-mixer="timeScale: 0.03" id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
         
+        <a-entity id="model-entity" 
+            gltf-model="#model" 
+            animation-mixer="timeScale: 0" 
+            position="0 0 -5" 
+            rotation="0 0 0" 
+            scale="1 1 1">
+        </a-entity>
+
         <!-- Camera and Lighting -->
    
         <a-sky color="#AAA"></a-sky>
@@ -132,7 +188,41 @@
             newScale = Math.max(minScale, Math.min(newScale, maxScale));
             model.setAttribute('scale', {x: newScale, y: newScale, z: newScale});
         });
-    
+        
+        //Home & Play/Stopcontrol
+        
+        const modelEntity = document.querySelector('#model-entity');
+        const animationControlButton = document.getElementById('animationControlButton');
+        const homeButton = document.getElementById('homeButton');
+        let isAnimationPlaying = false;
+
+        function toggleAnimation() {
+            isAnimationPlaying = !isAnimationPlaying;
+            modelEntity.setAttribute('animation-mixer', `timeScale: ${isAnimationPlaying ? 1 : 0}`);
+            animationControlButton.className = isAnimationPlaying ? 'fa fa-stop' : 'fa fa-play';
+        }
+
+        function resetAnimation() {
+            // Pause the animation
+            modelEntity.setAttribute('animation-mixer', 'timeScale: 0');
+            isAnimationPlaying = false;
+
+            // Reset the animation by restarting it and then immediately pausing
+            modelEntity.components['animation-mixer'].mixer.setTime(0);
+        }
+
+        animationControlButton.addEventListener('click', toggleAnimation);
+
+        homeButton.addEventListener('click', () => {
+            const cameraRig = document.querySelector('#rig');
+            cameraRig.setAttribute('position', '0 1.6 0');
+            cameraRig.setAttribute('rotation', '0 0 0');
+
+            resetAnimation();
+            animationControlButton.className = 'fa fa-play';
+        });
+
+
         // Existing panning functionality
         let isPanning = false;
         let startPanPosition = { x: 0, y: 0 };

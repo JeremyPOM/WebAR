@@ -43,13 +43,28 @@
         }
 
         /* Responsive Design: Adjust logo size for smaller screens */
-    @media (max-width: 600px) {
-        .logo {
-            width: 50px; /* Smaller size for smaller screens */
+        @media (max-width: 600px) {
+            .logo {
+                width: 50px; /* Smaller size for smaller screens */
+            }
         }
-    }
+        /* Style for the objects control table */
+        #objectsTable {
+                position: absolute;
+                top: 50px; /* Adjust as needed */
+                left: 10px; /* Adjust as needed */
+                border-collapse: collapse;
+                z-index: 20; /* To ensure it's above the A-Frame scene */
+            }
 
+            #objectsTable th, #objectsTable td {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
     </style>
+        <!-- ... existing head elements ... -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
 </head>
 <body>
      <!-- Title -->
@@ -57,6 +72,14 @@
 
      <!-- Logo -->
      <img src="/WebAR/assets/logos/Pomerleau_Sceau_Grand_bleu_RGB.png" alt="Company Logo" class="logo">
+
+     <table id="objectsTable">
+        <tr>
+            <th>Item</th>
+            <th><i class="fa fa-eye" aria-hidden="true"></i></th>
+        </tr>
+        <!-- Table rows will be added here dynamically -->
+    </table>
 
     <a-scene class="fullscreen" embedded renderer="antialias: true">
         <a-assets>
@@ -71,7 +94,7 @@
             <a-entity id="camera" camera look-controls wasd-controls="enabled: false;"></a-entity>
         </a-entity>
 
-        <a-entity gltf-model="#animatedModel" animation-mixer id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
+        <a-entity gltf-model="#model" animation-mixer="timeScale: 0.03" id="model-entity" position="0 0 -5" rotation="0 0 0" scale="1 1 1"></a-entity>
         
         <!-- Camera and Lighting -->
    
@@ -143,6 +166,31 @@
             }
         });
     
+        document.addEventListener('model-loaded', () => {
+            const model = document.querySelector('[gltf-model]').object3D;
+            const table = document.getElementById('objectsTable');
+
+            model.traverse((object) => {
+                if (object.isMesh) {
+                    const row = table.insertRow();
+                    const cell1 = row.insertCell();
+                    const cell2 = row.insertCell();
+
+                    cell1.textContent = object.name;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = true;
+                    checkbox.addEventListener('change', (e) => {
+                        object.visible = e.target.checked;
+                    });
+
+                    cell2.appendChild(checkbox);
+                }
+            });
+        });
+
+
         // Console logs for debugging
         document.querySelector('a-scene').addEventListener('loaded', () => {
             console.log('A-Frame scene is loaded');
